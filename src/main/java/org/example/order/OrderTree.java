@@ -3,17 +3,13 @@ package org.example.order;
 import java.util.*;
 
 public class OrderTree {
-    TreeMap<Double, LinkedList<Order>> orderTree = new TreeMap<>();
-    HashMap<String, Order> orderMap = new HashMap<>();
-    int volume = 0;
+    private TreeMap<Double, LinkedList<Order>> orderTree = new TreeMap<>();
+    private HashMap<String, Order> orderMap = new HashMap<>();
 
     public void addOrder(Order order) {
         String orderId = order.getOrderId();
         double price = order.getPrice();
-
         orderMap.put(orderId, order);
-        volume += order.getQuantity();
-
         orderTree.computeIfPresent(price, (k, v) -> {
             v.add(order);
             return v;
@@ -28,16 +24,13 @@ public class OrderTree {
 
     public void deleteOrder(String orderId) {
         Order order = orderMap.get(orderId);
-
         if (order == null) return;
-
         double price = order.getPrice();
         LinkedList<Order> priceList = orderTree.get(price);
         priceList.remove(order);
         if (priceList.isEmpty()) {
             orderTree.remove(price);
         }
-        volume -= order.getQuantity();
         orderMap.remove(orderId);
     }
 
@@ -66,16 +59,25 @@ public class OrderTree {
 
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        builder.append("\n" + "Price, Quantity, Orders" + "\n");
+        builder.append("\n" + "Price, Quantity, Orders, Amount" + "\n");
         for (Map.Entry<Double, LinkedList<Order>> entry : orderTree.entrySet()) {
             int nOrdersAtPriceLevel = entry.getValue()
                     .stream()
                     .map(o -> o.getQuantity())
                     .reduce(0, Integer::sum);
-            builder.append(entry.getKey() + ", " + nOrdersAtPriceLevel + ", " + entry.getValue().size());
+
+            Double nAmountTotal = entry.getValue()
+                    .stream()
+                    .map(o -> o.getAmount())
+                    .reduce(0.0, Double::sum);
+            builder.append(entry.getKey() + ", " + nOrdersAtPriceLevel + ", " + entry.getValue().size() + ", " + nAmountTotal);
             builder.append("\n");
         }
 
         return builder.toString();
+    }
+
+    public int getOrderCount() {
+        return orderMap.size();
     }
 }
